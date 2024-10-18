@@ -15,6 +15,25 @@ interface User {
 const notFoundResponse = new Response('Not found', { status: 404 });
 const unauthorizedResponse = new Response('Unauthorized', { status: 401 });
 
+const checkAuth = async (request: Request) => {
+    const authHeader = request.headers.get('Authorization');
+    //Bearer 078499
+    if (!authHeader) return false;
+
+    const token = authHeader.split(' ')[1]
+    if (!token) return false;
+
+    try {
+
+        const secret = new TextEncoder().encode('Bun.env.JWT_SECRET');
+        const { payload } = await jose.jwtVerify(token,secret);
+        return payload; 
+    } catch (err) {
+        return false;
+    }
+
+}
+
 const server = Bun.serve({
   port: 3000,
   async fetch(request: Request) {
@@ -32,6 +51,9 @@ const server = Bun.serve({
           return new Response(null, { status:201 });
       }
       else if (request.method === 'GET') {
+
+        const payload = await checkAuth(request);
+        if (!payload) return unauthorizedResponse;
         
         const users: User[] = db.query('SELECT id, name, email FROM users').all() as User[]; 
 
