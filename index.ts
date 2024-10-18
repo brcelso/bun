@@ -1,4 +1,5 @@
 import { Database } from 'bun:sqlite';
+import * as jose from 'jose';
 
 const db = new Database('mydb.sqlite', { create: true });
 
@@ -12,6 +13,7 @@ interface User {
 }
 
 const notFoundResponse = new Response('Not found', { status: 404 });
+const unauthorizedResponse = new Response('Unauthorized', { status: 401 });
 
 const server = Bun.serve({
   port: 3000,
@@ -29,7 +31,6 @@ const server = Bun.serve({
 
           return new Response(null, { status:201 });
       }
-
       else if (request.method === 'GET') {
         
         const users: User[] = db.query('SELECT id, name, email FROM users').all() as User[]; 
@@ -37,7 +38,7 @@ const server = Bun.serve({
         return Response.json ({
           users
         })
-      }
+        }
       } else if (url.pathname.match(/^\/users\/(\d+)$/)) {
         
         const id = Number(url.pathname.split('/').pop());
@@ -51,8 +52,37 @@ const server = Bun.serve({
             return Response.json({
               user: userDb
             })
+        } else if (request.method === 'DELETE') {
+
+             db.run('DELETE FROM users WHERE id = ?', [id]);
+             return new Response();
+        } else if (request.method === 'PUT') {
+
+             const body = await request.json();
+             db.run('UPDATE users SET name = ?, email = ?, id = ?', body.name, body.email, id);
+             return new Response();   
         }
 
+      } else if (url.pathname === '/auth/signin' && request.method === 'POST') {
+
+        const body = await request.json();
+        const userDb = db.query ('SELECT * FROM users WHERE email = ?').get(body.email) as User;
+
+        if (!userDb) return unauthorizedResponse;
+
+        const isPasswordValid = await Bun.password.verify(body.password, userDb.password);
+        if (!isPasswordValid) return unauthorizedResponse;
+
+        const secret = new TextEncoder().encode('Bun.env.JWT_SECRET');
+        const token = await new jose.SignJWT({
+            userId: userDb.id
+        }).setProtectedHeader({ alg: 'HS256' })
+        .setExpirationTime('2h')
+        .sign(secret);
+
+        return Response.json({
+          token
+        });
       }
      
     return notFoundResponse; 

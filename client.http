@@ -14,3 +14,24 @@ Content-Type: application/json
 ###
 GET http://localhost:3000/users/1
 
+###
+DELETE http://localhost:3000/users/1
+
+###
+PUT http://localhost:3000/users/3 HTTP/1.1
+Content-Type: application/json
+
+{
+    "name": "Celso3",
+    "email": "celso.sjunior@outlook.com"
+}
+
+###
+POST http://localhost:3000/auth/signin HTTP/1.1
+Content-Type: application/json
+
+{
+    "password": "078499",
+    "email": "celso.sjunior@outlook.com"
+    
+}
