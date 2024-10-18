@@ -23,7 +23,7 @@ PUT http://localhost:3000/users/3 HTTP/1.1
 Content-Type: application/json
 
 {
-    "name": "Celso3",
+    "name": "Celso da Silva Junior",
     "email": "celso.sjunior@outlook.com"
 }
 
