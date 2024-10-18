@@ -7,12 +7,20 @@ interface User {
 
 const server = Bun.serve({
   port: 3000,
-  fetch(request: Request) {
+  async fetch(request: Request) {
     const url = new URL(request.url);
 
     if (url.pathname === '/users') {
 
-      if (request.method === 'GET') {
+      if (request.method === 'POST') {
+
+          const body = await request.json();
+          console.log(body);
+
+          return new Response(null, { status:201 });
+      }
+
+      else if (request.method === 'GET') {
         
         const users: User[] = [];
 
@@ -24,7 +32,7 @@ const server = Bun.serve({
     }
 
     return new Response('Not found', { status: 404 });
-    
+
   },
 });
 
