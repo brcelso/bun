@@ -1,3 +1,9 @@
+import { Database } from 'bun:sqlite';
+
+const db = new Database('mydb.sqlite', { create: true });
+
+db.run("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, email TEXT, password TEXT)");
+
 interface User {
   id: number;
   name: string;
@@ -15,14 +21,16 @@ const server = Bun.serve({
       if (request.method === 'POST') {
 
           const body = await request.json();
-          console.log(body);
+          
+          const hashedPassword = await Bun.password.hash(body.password, 'bcrypt');
+          db.run('INSERT INTO users( name, email, password) VALUES (?, ?, ?)', body.name, body.email, hashedPassword)
 
           return new Response(null, { status:201 });
       }
 
       else if (request.method === 'GET') {
         
-        const users: User[] = [];
+        const users: User[] = db.query('SELECT id, name, email FROM users').all() as User[]; 
 
         return Response.json ({
           users
