@@ -11,6 +11,8 @@ interface User {
   password: string;
 }
 
+const notFoundResponse = new Response('Not found', { status: 404 });
+
 const server = Bun.serve({
   port: 3000,
   async fetch(request: Request) {
@@ -35,12 +37,25 @@ const server = Bun.serve({
         return Response.json ({
           users
         })
-      
-      } 
-    }
+      }
+      } else if (url.pathname.match(/^\/users\/(\d+)$/)) {
+        
+        const id = Number(url.pathname.split('/').pop());
 
-    return new Response('Not found', { status: 404 });
+        const userDb = db.query('SELECT id, name, email FROM users WHERE id = ?').get(id) as User;
 
+        if (!userDb) return notFoundResponse
+
+        if (request.method === 'GET') {
+            
+            return Response.json({
+              user: userDb
+            })
+        }
+
+      }
+     
+    return notFoundResponse; 
   },
 });
 

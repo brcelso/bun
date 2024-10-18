@@ -10,3 +10,7 @@ Content-Type: application/json
     "email": "celso.sjunior@outlook.com",
     "password": "078499"
 }
+
+###
+GET http://localhost:3000/users/1
+
